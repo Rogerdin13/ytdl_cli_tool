@@ -99,10 +99,3 @@ if __name__ == "__main__":
 
     selected_dl = dl_options[selected_dl_index]
     print(selected_dl)
-
-
-"""
-help text include: 
-    - give '-a' for audio only else video+audio
-    - give '-v' for video only else video+audio
-"""
