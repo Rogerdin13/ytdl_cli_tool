@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+
+'''
+
+small cli tool to download either audio from a video or the full video
+(so basically a wrapper for the pafy pip-package)
+
+pafy-doc: https://pythonhosted.org/Pafy/
+note: pafy needs youtube-dl pip-package to be installed
+
+put into /usr/local/bin/ and use chmod +x <filename> to make it accessible.
+accessibility: whole system, for all users
+
+usage: check -h/--help arg
+
+'''
+
+
+import pafy
+import sys
+import os
+
+
+def check_existing_python() -> bool:
+    pass
+
+
+def check_input_path() -> bool:
+    pass
+
+
+def check_file_exists() -> bool:
+    pass
+
+
+def get_default_path() -> str:
+    pass
+
+
+def audio_only_given() -> bool:
+    return "-a" in sys.argv
+
+
+def video_only_given() -> bool:
+    return "-v" in sys.argv
+
+
+def download_video():
+    pass
+
+
+"""
+returns the quality of a list of streams given by pafy
+decides on what the 'quality' is based on if audio-only-flag was given
+
+for audio quality is 'bitrate'
+else quality is 'p'
+"""
+def get_quality_of_streams_string(s: list) -> str:
+    if audio_only_given():
+        # concatinate every bitrate value and beautify
+        return "".join([f"{i}: bitrate={str(st.bitrate)} (.{st.extension})\n" for i, st in enumerate(s, start=1)])
+    else:
+        # concatinate every quality number (b of resolution = a x b) and beautify
+        return "".join([f"{i}: {str(st.quality).split('x')[1]}p (.{st.extension})\n" for i, st in enumerate(s, start=1)])
+
+
+
+if __name__ == "__main__":
+
+    # test link = "https://www.youtube.com/watch?v=enYdAxVcNZA"
+    # test dir  = /home/<usr>/Downloads/
+
+    url = "https://www.youtube.com/watch?v=enYdAxVcNZA"
+    pafy_vid = pafy.new(url)
+
+    # pafy can only get 'normal','video' or 'audio' streams
+    # normal = video+audio
+    # audio = audio only
+    # video = video only
+    stream_type = "audio" if audio_only_given() else "video" if video_only_given() else "normal"
+
+    dl_options = [o for o in pafy_vid.allstreams if o.mediatype == stream_type]
+    dl_options_quality_string = get_quality_of_streams_string(dl_options)
+    print(f"The following qualities could be found for your selection ('{stream_type}'):\n{dl_options_quality_string}")
+
+    selected_dl_index_str = input("Select the quality you want to download: ")
+
+    # validate that entry was digit
+    if(not selected_dl_index_str.isdigit()):
+        print("\tERROR: An invalid selection was made.\n\tClosing...")
+        os._exit(0)
+
+    selected_dl_index = int(selected_dl_index_str) - 1
+
+    # validate that digit is in array-range
+    if(not selected_dl_index in range(len(dl_options))):
+        print("\nERROR: Selection did not exist.\nClosing...\n")
+        os._exit(0)
+    
+    selected_dl = dl_options[selected_dl_index]
+    print(selected_dl)
+
+
+
+"""
+help text include: 
+    - give '-a' for audio only else video+audio
+    - give '-v' for video only else video+audio
+"""
