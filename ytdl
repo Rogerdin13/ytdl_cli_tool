@@ -101,7 +101,6 @@ if __name__ == "__main__":
     print(selected_dl)
 
 
-
 """
 help text include: 
     - give '-a' for audio only else video+audio
