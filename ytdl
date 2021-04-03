@@ -65,7 +65,6 @@ def get_quality_of_streams_string(s: list) -> str:
         return "".join([f"{i}: {str(st.quality).split('x')[1]}p (.{st.extension})\n" for i, st in enumerate(s, start=1)])
 
 
-
 if __name__ == "__main__":
 
     # test link = "https://www.youtube.com/watch?v=enYdAxVcNZA"
@@ -89,15 +88,15 @@ if __name__ == "__main__":
     # validate that entry was digit
     if(not selected_dl_index_str.isdigit()):
         print("\tERROR: An invalid selection was made.\n\tClosing...")
-        os._exit(0)
+        os._exit(-1)
 
     selected_dl_index = int(selected_dl_index_str) - 1
 
     # validate that digit is in array-range
-    if(not selected_dl_index in range(len(dl_options))):
+    if(selected_dl_index not in range(len(dl_options))):
         print("\nERROR: Selection did not exist.\nClosing...\n")
-        os._exit(0)
-    
+        os._exit(-1)
+
     selected_dl = dl_options[selected_dl_index]
     print(selected_dl)
 
