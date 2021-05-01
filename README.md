@@ -3,19 +3,19 @@ cli-tool to download audio or video via pafy
 
 
 <b>TODOs</b>:
-    - add Ctrl+C "beautified exit"
-    - finish path functionality
-    - make the tool work on windows aswell
+    - make the tool work on Windows aswell
     - add -h/--help doc
         - give '-a' for audio only else video+audio
         - give '-v' for video only else video+audio
+        - give '-p' for specific path
         - describe default behaviour
         - describe how to specify the path + show default paths
         - describe dependancies
-    - beautify readme.md
+    - beautify & finish readme.md
     - (later) validate python [check for python version]
-    - validate args [check for path (add defaults for win&unix)]
-    - (optional) take vid-id only in addition to full url
+    - make tool retry entry-when input is out of range or faulty
+    - change behaviour when only one option is available by pafy (skip selection)
+    - (optional) make file size string automatic (KiB, MiB, GiB, etc)
 
 <h2>Setup</h2>
 <h3>Unix</h3>

@@ -8,11 +8,14 @@ small cli tool to download either audio from a video or the full video
 pafy-doc: https://pythonhosted.org/Pafy/
 note: pafy needs youtube-dl pip-package to be installed
 
-put into /usr/local/bin/ and use chmod +x <filename> to make it accessible.
+put into /usr/local/bin/ [and use chmod +x <filename>] to make it accessible.
 accessibility: whole system, for all users
 
 usage: check -h/--help arg
 
+
+
+test url: "https://www.youtube.com/watch?v=enYdAxVcNZA"
 """
 
 
@@ -25,23 +28,48 @@ def check_existing_python() -> bool:
     pass
 
 
-def check_input_path() -> bool:
-    pass
+def check_path_exists(path: str) -> bool:
+    return os.path.isdir(path)
 
 
-def check_file_exists() -> bool:
-    pass
+def check_file_exists(path: str, file: str) -> bool:
+    return os.path.isfile(f"{path}/{file}")
+
+
+def get_url() -> str:
+    url = sys.argv[-1]
+    if url.startswith("/") or url.startswith("-") or url == "ytdl":
+        print("\nERROR: url not given.\n\tClosing...\n")
+        return None
+    return url
 
 
 def get_dwnld_path() -> str:
+    """
+        checks for -p param in call,
+        then checks if path was specified correctly and exists
+        returns:
+            on error:None
+            on succes:download-path as str
+    """
     if path_given():
-        #TODO
-        return "<PATH>"
+        arg_index = sys.argv.index("-p")
+        path_index = arg_index + 1
+        if path_index > len(sys.argv) - 1 or sys.argv[path_index].startswith("-"):
+            print("\nERROR: Path not given.\n\tClosing...\n")
+            return None
+        path = sys.argv[path_index]
+        if not check_path_exists(path):
+            print("\nERROR: Path doesn't exist.\n\tClosing...\n")
+            return None
+        return path
     return get_default_path()
 
 
 def get_default_path() -> str:
-    """Returns the default downloads path for linux or windows"""
+    """
+        Returns the default downloads path for linux or windows
+    """
     if os.name == "nt":
         """     TODO    TODO    TODO
         #import winreg
@@ -51,7 +79,7 @@ def get_default_path() -> str:
             location = winreg.QueryValueEx(key, downloads_guid)[0]
         return location
         """
-        return ""
+        return None
     else:
         return os.path.join(os.path.expanduser("~"), "Downloads")
 
@@ -62,6 +90,7 @@ def audio_only_given() -> bool:
 
 def video_only_given() -> bool:
     return "-v" in sys.argv
+
 
 def path_given() -> bool:
     return "-p" in sys.argv
@@ -90,53 +119,65 @@ def get_quality_of_streams_string(s: list) -> str:
     """
     if audio_only_given():
         # concatinate every bitrate value and beautify
-        return "".join([f"{i}: bitrate={str(st.bitrate)} (.{st.extension})\n" for i, st in enumerate(s, start=1)])
+        return "".join([f"\t{i}: bitrate={str(st.bitrate)} (.{st.extension})\n" for i, st in enumerate(s, start=1)])
     else:
         # concatinate every quality number (b of resolution = a x b) and beautify
-        return "".join([f"{i}: {str(st.quality).split('x')[1]}p (.{st.extension})\n" for i, st in enumerate(s, start=1)])
+        return "".join([f"\t{i}: {str(st.quality).split('x')[1]}p (.{st.extension})\n" for i, st in enumerate(s, start=1)])
 
 
-if __name__ == "__main__":
+def main(url: str, path: str):
 
-    # test link = "https://www.youtube.com/watch?v=enYdAxVcNZA"
-    # test dir  = /home/<usr>/Downloads/    
-    
-    #TODO read from args
-    url = "https://www.youtube.com/watch?v=enYdAxVcNZA"
     pafy_vid = pafy.new(url)
 
-    # pafy can only get 'normal','video' or 'audio' streams
-    # normal = video+audio
-    # audio = audio only
-    # video = video only
     stream_type = "audio" if audio_only_given() else "video" if video_only_given() else "normal"
 
+    # get and format download options
     dl_options = [o for o in pafy_vid.allstreams if o.mediatype == stream_type]
     dl_options_quality_string = get_quality_of_streams_string(dl_options)
+
+    # show selection of found options
     print(f"The following qualities could be found for your selection ('{stream_type}'):\n{dl_options_quality_string}")
 
+    # read selection
     selected_dl_index_str = input("Select the quality you want to download: ")
 
     # validate that entry was digit
-    if(not selected_dl_index_str.isdigit()):
-        print("\nERROR: An invalid selection was made.\n\tClosing...")
+    if not selected_dl_index_str.isdigit():
+        print("\nERROR: An invalid selection was made.\n\tClosing...\n")
         os._exit(-1)
 
+    # convert entry to digit
     selected_dl_index = int(selected_dl_index_str) - 1
 
-    # validate that digit is in array-range
-    if(selected_dl_index not in range(len(dl_options))):
-        print("\nERROR: Selection did not exist.\nClosing...\n")
+    # validate that selection-digit is in array-range
+    if selected_dl_index not in range(len(dl_options)):
+        print("\nERROR: Selection did not exist.\n\tClosing...\n")
         os._exit(-1)
 
-    dwnld_path = get_dwnld_path()
-
-    print(dwnld_path)
-    """
+    # get stream object to download
     selected_dl = dl_options[selected_dl_index]
-    print()
+
+    if check_file_exists(path, f"{selected_dl.title}.{selected_dl.extension}"):
+        print("\nFile already exists.\n\tClosing...\n")
+        os._exit(-1)
+
     selected_dl.download(filepath=dwnld_path, quiet=True, callback=show_progress)
-    print()
+
     dwnlded_size = round(selected_dl.get_filesize() / 1024 / 1024, 2)
-    print(f"download-path: {dwnld_path}, dowload-size: {dwnlded_size}MiB")
-    """
+    print(f"\nFile downloaded to: {dwnld_path}, file-size: {dwnlded_size}MiB\n\tClosing...\n")
+
+
+if __name__ == "__main__":
+    try:
+        dwnld_path = get_dwnld_path()
+        url = get_url()
+
+        if dwnld_path is None or url is None:
+            os._exit(-1)
+
+        main(url, dwnld_path)
+    except KeyboardInterrupt:
+        print("\n\tClosing...")
+        os._exit(-1)
+    except Exception as e:
+        print(f"An Unknown Error occured ({e})\n\tClosing...\n")
